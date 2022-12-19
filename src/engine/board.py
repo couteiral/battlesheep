@@ -44,14 +44,18 @@ class Board:
      """
 
     def __init__(self, size: int, holes: Iterator[Coordinate]= None) -> None:
+        self._size = size
         self._grid = np.zeros((size, size, 2), dtype=np.int8)
         if holes:
             for x, y in holes:
                 self._grid[x, y, 0] = -1
 
+    def _out_of_bounds(self, c):
+        return c < 0 or c >= self._size
+
     def get_size(self) -> int:
         """Returns the size of the grid."""
-        return self._grid.shape[0]
+        return self._size
 
     def get_state(self) -> np.ndarray:
         """Returns the state of the board."""
@@ -104,6 +108,8 @@ class Board:
         dx, dy = DIRECTIONS[direction]
         while self._grid[x+dx, y+dy, 0] == 0: 
             x += dx; y += dy
+            if self._out_of_bounds(x+dx) or self._out_of_bounds(y+dy):
+                break
         return x, y
 
     def move_player(self, player: int, x: int, y: int, n_units: int, direction: str) -> None:
