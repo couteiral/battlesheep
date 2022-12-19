@@ -49,6 +49,13 @@ class Board:
             for x, y in holes:
                 self._grid[x, y, 0] = -1
 
+    def get_state(self) -> np.ndarray:
+        """Returns the state of the board."""
+        return self._grid
+
+    def get_score(self, player) -> int:
+        return len(self._grid[..., 0] == player)
+
     def is_empty(self, c: Coordinate) -> bool:
         """Returns True if the cell is empty."""
         return self._grid[*c, 0] == 0 # type: ignore
