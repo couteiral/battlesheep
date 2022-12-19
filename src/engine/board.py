@@ -1,15 +1,15 @@
 """Classes representing the state of the board."""
 
 
-from typing import Iterator, List
+from typing import Iterator, Tuple
 
 import numpy as np
-from coordinate import Coordinate
 
+Coordinate = Tuple[int, int]
 DIRECTIONS = {
-    'UR': Coordinate( 1,  1), 'UL': Coordinate( 1, -1),
-    'R':  Coordinate( 0,  1),  'L': Coordinate( 0, -1),
-    'DR': Coordinate(-1, -1), 'DL': Coordinate(-1, -1)
+    'UR': ( 1,  1), 'UL': ( 1, -1),
+    'R':  ( 0,  1),  'L': ( 0, -1),
+    'DR': (-1, -1), 'DL': (-1, -1)
 }
 
 
@@ -49,6 +49,10 @@ class Board:
             for x, y in holes:
                 self._grid[x, y, 0] = -1
 
+    def get_size(self) -> int:
+        """Returns the size of the grid."""
+        return self._grid.shape[0]
+
     def get_state(self) -> np.ndarray:
         """Returns the state of the board."""
         return self._grid
@@ -56,62 +60,62 @@ class Board:
     def get_score(self, player) -> int:
         return len(self._grid[..., 0] == player)
 
-    def is_empty(self, c: Coordinate) -> bool:
+    def is_empty(self, x: int, y: int) -> bool:
         """Returns True if the cell is empty."""
-        return self._grid[c][0] == 0 # type: ignore
+        return self._grid[x, y, 0] == 0 
 
-    def is_hole(self, c: Coordinate) -> bool:
+    def is_hole(self, x: int, y: int) -> bool:
         """Returns True if the cell is a hole."""
-        return self._grid[c][0] == -1 # type: ignore
+        return self._grid[x, y, 0] == -1 
 
-    def is_occupied(self, c: Coordinate) -> bool:
+    def is_occupied(self, x: int, y: int) -> bool:
         """Returns True if the cell is occupied."""
-        return self._grid[c][0] > 0 # type: ignore
+        return self._grid[x, y, 0] > 0 
 
-    def player_at(self, c: Coordinate) -> int:
+    def player_at(self, x: int, y: int) -> int:
         """Returns the player occupying the cell. Will
         raise an AssertionError if the cell is not occupied."""
-        assert self.is_occupied(c)
-        return self._grid[c][0] # type: ignore
+        assert self.is_occupied(x, y)
+        return self._grid[x, y, 0] 
 
-    def units_at(self, c: Coordinate) -> int:
+    def units_at(self, x: int, y: int) -> int:
         """Returns the number of units in the cell. Will
         raise an AssertionError if the cell is not occupied."""
-        assert self.is_occupied(c)
-        return self._grid[c][1] # type: ignore
+        assert self.is_occupied(x, y)
+        return self._grid[x, y, 1] 
 
     def get_player_positions(self, player: int) -> Iterator[Coordinate]:
         """Returns an iterator of the positions of the
         given player."""
         return np.where(self._grid[..., 0] == player)
 
-    def initialize_player(self, player: int, c: Coordinate, n_units: int) -> None:
+    def initialize_player(self, player: int, x: int, y: int, n_units: int) -> None:
         """Initializes the player at the given coordinates."""
-        assert self.is_empty(c)
-        self._grid[c][0] = player  # type: ignore
-        self._grid[c][1] = n_units # type: ignore
+        assert self.is_empty(x, y)
+        self._grid[x, y, 0] = player  
+        self._grid[x, y, 1] = n_units 
 
-    def next_empty_cell(self, c: Coordinate, direction: str) -> Coordinate:
+    def next_empty_cell(self, x: int, y: int, direction: str) -> Coordinate:
         """Returns the next empty cell in the grid, starting from the given
         coordinates."""
         if direction not in DIRECTIONS.keys():
             return ValueError('Invalid direction.')
 
         dc = DIRECTIONS[direction]
-        while self[(c+dc)] == 0: # type: ignore
+        while self[(c+dc)] == 0: 
             c += dc
         return c
 
-    def move_player(self, player: int, c: Coordinate, n_units: int, direction: str) -> None:
+    def move_player(self, player: int, x: int, y: int, n_units: int, direction: str) -> None:
         """Moves the player at the given coordinates."""
-        assert self.player_at(c) == player
+        assert self.player_at(x, y) == player
         assert n_units > 1 and n_units < self.units_at(c) - 1
-        next_c = self.next_empty_cell(c, direction)
-        assert self.is_empty(next_c) and next_c != c
+        nx, ny = self.next_empty_cell(x, y, direction)
+        assert self.is_empty(nx, ny) and (nx != x or ny != ny)
 
-        self._grid[c][1] -= n_units      # type: ignore
-        self._grid[next_c][0] = player   # type: ignore
-        self._grid[next_c][1] = n_units  # type: ignore
+        self._grid[x, y, 1] -= n_units      
+        self._grid[nx, ny, 0] = player   
+        self._grid[nx, ny, 1] = n_units  
 
     def get_player_moveable_positions(self, player: int) -> Iterator[Coordinate]:
         """Returns an iterator of the positions of the
@@ -120,16 +124,17 @@ class Board:
         return [option for option in player_options
             if self._available_moves(option)]
 
-    def _available_moves(self, c: Coordinate) -> bool:
+    def _available_moves(self, x: int, y: int) -> bool:
         """Returns True if the cell can be moved."""
         # For efficiency, check neighbours first
-        for _, dc in DIRECTIONS.items():
-            if self._grid[(c+dc)][0]== 0: # type: ignore
+        for _, (nx, ny) in DIRECTIONS.items():
+            if self._grid[x+nx, y+ny] == 0: 
                 return True
 
         # Then check the rest
         for direction in DIRECTIONS.keys():
-            if self.next_empty_cell(c, direction) != c:
+            nx, ny = self.next_empty_cell(nx, ny, direction)
+            if x != nx or y != ny:
                 return True
 
         return False
