@@ -58,27 +58,27 @@ class Board:
 
     def is_empty(self, c: Coordinate) -> bool:
         """Returns True if the cell is empty."""
-        return self._grid[*c, 0] == 0 # type: ignore
+        return self._grid[c][0] == 0 # type: ignore
 
     def is_hole(self, c: Coordinate) -> bool:
         """Returns True if the cell is a hole."""
-        return self._grid[*c, 0] == -1 # type: ignore
+        return self._grid[c][0] == -1 # type: ignore
 
     def is_occupied(self, c: Coordinate) -> bool:
         """Returns True if the cell is occupied."""
-        return self._grid[*c, 0] > 0 # type: ignore
+        return self._grid[c][0] > 0 # type: ignore
 
     def player_at(self, c: Coordinate) -> int:
         """Returns the player occupying the cell. Will
         raise an AssertionError if the cell is not occupied."""
         assert self.is_occupied(c)
-        return self._grid[*c, 0] # type: ignore
+        return self._grid[c][0] # type: ignore
 
     def units_at(self, c: Coordinate) -> int:
         """Returns the number of units in the cell. Will
         raise an AssertionError if the cell is not occupied."""
         assert self.is_occupied(c)
-        return self._grid[*c, 1] # type: ignore
+        return self._grid[c][1] # type: ignore
 
     def get_player_positions(self, player: int) -> Iterator[Coordinate]:
         """Returns an iterator of the positions of the
@@ -88,8 +88,8 @@ class Board:
     def initialize_player(self, player: int, c: Coordinate, n_units: int) -> None:
         """Initializes the player at the given coordinates."""
         assert self.is_empty(c)
-        self._grid[*c, 0] = player  # type: ignore
-        self._grid[*c, 1] = n_units # type: ignore
+        self._grid[c][0] = player  # type: ignore
+        self._grid[c][1] = n_units # type: ignore
 
     def next_empty_cell(self, c: Coordinate, direction: str) -> Coordinate:
         """Returns the next empty cell in the grid, starting from the given
@@ -98,7 +98,7 @@ class Board:
             return ValueError('Invalid direction.')
 
         dc = DIRECTIONS[direction]
-        while self[*(c+dc)] == 0: # type: ignore
+        while self[(c+dc)] == 0: # type: ignore
             c += dc
         return c
 
@@ -109,9 +109,9 @@ class Board:
         next_c = self.next_empty_cell(c, direction)
         assert self.is_empty(next_c) and next_c != c
 
-        self._grid[*c, 1] -= n_units      # type: ignore
-        self._grid[*next_c, 0] = player   # type: ignore
-        self._grid[*next_c, 1] = n_units  # type: ignore
+        self._grid[c][1] -= n_units      # type: ignore
+        self._grid[next_c][0] = player   # type: ignore
+        self._grid[next_c][1] = n_units  # type: ignore
 
     def get_player_moveable_positions(self, player: int) -> Iterator[Coordinate]:
         """Returns an iterator of the positions of the
@@ -124,7 +124,7 @@ class Board:
         """Returns True if the cell can be moved."""
         # For efficiency, check neighbours first
         for _, dc in DIRECTIONS.items():
-            if self._grid[*(c+dc), 0]== 0: # type: ignore
+            if self._grid[(c+dc)][0]== 0: # type: ignore
                 return True
 
         # Then check the rest
