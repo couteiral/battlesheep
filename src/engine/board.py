@@ -101,15 +101,15 @@ class Board:
         if direction not in DIRECTIONS.keys():
             return ValueError('Invalid direction.')
 
-        dc = DIRECTIONS[direction]
-        while self[(c+dc)] == 0: 
-            c += dc
-        return c
+        dx, dy = DIRECTIONS[direction]
+        while self._grid[x+dx, y+dy, 0] == 0: 
+            x += dx; y += dy
+        return x, y
 
     def move_player(self, player: int, x: int, y: int, n_units: int, direction: str) -> None:
         """Moves the player at the given coordinates."""
         assert self.player_at(x, y) == player
-        assert n_units > 1 and n_units < self.units_at(c) - 1
+        assert n_units > 1 and n_units < self.units_at(x, y) - 1
         nx, ny = self.next_empty_cell(x, y, direction)
         assert self.is_empty(nx, ny) and (nx != x or ny != ny)
 
