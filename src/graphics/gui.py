@@ -29,6 +29,7 @@ class BoardGUI:
         ax.set_xlim(-1, board_size)
         ax.set_ylim(-1, board_size)
         ax.axis('off')
+        ax.invert_yaxis()
         return fig, ax
 
     def _draw_board(self, board: Board) -> None:
