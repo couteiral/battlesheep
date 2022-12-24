@@ -1,10 +1,9 @@
 """Abstract base class for players."""
 
-import abc
 import random
 
 
-class Player(abc.ABCMeta):
+class Player():
     """Abstract base class for players."""
 
     def calculate_move(self, state, actions):
@@ -17,4 +16,7 @@ class RandomPlayer(Player):
 
     def calculate_move(self, state, actions):
         """Calculates the move to make."""
-        return random.choice(actions)
+        (x, y), direction = random.choice(actions)
+        max_units = state[x, y, 1]
+        n_units = random.randint(1, max_units-1)
+        return (x, y), direction, n_units
