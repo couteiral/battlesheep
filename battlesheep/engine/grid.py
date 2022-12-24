@@ -44,6 +44,10 @@ class HexagonalGrid:
         """Returns the state of the grid."""
         return self._grid
 
+    def get_score(self, player_id: int) -> int:
+        """Returns the score of the grid."""
+        return (self._grid[:, :, 0] == player_id).sum()
+
     @staticmethod
     def cube_to_offset(q: int, r: int, s: int) -> Tuple[int, int]:
         """Converts cube coordinates to offset coordinates."""
@@ -103,7 +107,7 @@ class HexagonalGrid:
         """Returns the player occupying the cell. Will
         raise an AssertionError if the cell is not occupied."""
         assert self.is_occupied(q, r, s)
-        return self.__getitem__[0]
+        return self.__getitem__(q, r, s)[0]
 
     def units_at(self, q: int, r: int, s: int) -> int:
         """Returns the number of units in the cell. Will
@@ -173,3 +177,17 @@ class HexagonalGrid:
         x, y = self.to_offset(q, r, s)
         self._grid[x, y, 0] = player_id 
         self._grid[x, y, 1] = n_units 
+
+    def move_player(self, player_id: int, x: int, y: int,
+    n_units: int, direction: str) -> None:
+        """Moves the player in the given direction."""
+        assert player_id >= 1
+        assert self.player_at(q, r, s) == player_id
+        assert n_units > 1 and n_units < self.units_at(q, r, s)
+        nq, nr, ns = self.get_next_moveable_cell(q, r, s, direction)
+        assert self.is_empty(nq, nr, ns) and (nq != q or nr != r or ns != s)
+
+        nx, ny = self.to_offset(nq, nr, ns)
+        self._grid[x, y, 1] -= n_units      
+        self._grid[nx, ny, 0] = player_id
+        self._grid[nx, ny, 1] = n_units
