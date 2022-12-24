@@ -48,62 +48,56 @@ def test_coordinate_conversion2():
 def test_grid_values():
     holes = [(0, 0), (1, 1), (2, 2)]
     square_grid = HexagonalGrid(8, holes=holes)
-    assert square_grid.is_hole(*square_grid.to_cube(0, 0))
-    assert square_grid.is_hole(*square_grid.to_cube(1, 1))
-    assert square_grid.is_hole(*square_grid.to_cube(2, 2))
+    assert square_grid.is_hole(0, 0)
+    assert square_grid.is_hole(1, 1)
+    assert square_grid.is_hole(2, 2)
 
-    q1, r1, s1 = square_grid.to_cube(1, 0)
-    q2, r2, s2 = square_grid.to_cube(5, 7)
-    square_grid.initialize_player(1, q1, r1, s1, 16)
-    square_grid.initialize_player(2, q2, r2, s2, 16)
-    assert not square_grid.is_empty(q1, r1, s1)
-    assert not square_grid.is_empty(q2, r2, s2)
-    assert not square_grid.is_hole(q1, r1, s1)
-    assert not square_grid.is_hole(q2, r2, s2)
-    assert square_grid.is_occupied(q1, r1, s1) 
-    assert square_grid.is_occupied(q2, r2, s2)
-    assert square_grid.is_occupied_by_player(q1, r1, s1, 1)
-    assert square_grid.is_occupied_by_player(q2, r2, s2, 2)
-    assert not square_grid.is_occupied_by_player(q1, r1, s1, 2)
-    assert not square_grid.is_occupied_by_player(q2, r2, s2, 1)
-    assert square_grid.units_at(q1, r1, s1) == 16
-    assert square_grid.units_at(q2, r2, s2) == 16
+    x1, y1 = (1, 0)
+    x2, y2 = (5, 7)
+    square_grid.initialize_player(1, x1, y1, 16)
+    square_grid.initialize_player(2, x2, y2, 16)
+    assert not square_grid.is_empty(x1, y1)
+    assert not square_grid.is_empty(x2, y2)
+    assert not square_grid.is_hole(x1, y1)
+    assert not square_grid.is_hole(x2, y2)
+    assert square_grid.is_occupied(x1, y1) 
+    assert square_grid.is_occupied(x2, y2)
+    assert square_grid.is_occupied_by_player(x1, y1, 1)
+    assert square_grid.is_occupied_by_player(x2, y2, 2)
+    assert not square_grid.is_occupied_by_player(x1, y1, 2)
+    assert not square_grid.is_occupied_by_player(x2, y2, 1)
+    assert square_grid.units_at(x1, y1) == 16
+    assert square_grid.units_at(x2, y2) == 16
     assert square_grid.get_score(1) == 1
     assert square_grid.get_score(2) == 1
 
 
 def test_next_cell_search1():
     square_grid = HexagonalGrid(8)
-    x1, y1 = 0, 0
-    q1, r1, s1 = square_grid.to_cube(x1, y1)
-    q2, r2, s2 = square_grid.get_next_moveable_cell(q1, r1, s1, 'R')
-    x2, y2 = square_grid.to_offset(q2, r2, s2)
+    x1, y1 = (0, 0)
+    x2, y2 = square_grid.get_next_moveable_cell(x1, y1, 'R')
     assert x2 == 0 and y2 == 7
-    assert square_grid.is_empty(q2, r2, s2)
+    assert square_grid.is_empty(x2, y2)
 
-    q2, r2, s2 = square_grid.get_next_moveable_cell(q1, r1, s1, 'L')
-    x2, y2 = square_grid.to_offset(q2, r2, s2)
+    x2, y2 = square_grid.get_next_moveable_cell(x1, y1, 'L')
     assert x2 == x1 and y2 == y1
-    assert square_grid.is_empty(q2, r2, s2)
+    assert square_grid.is_empty(x2, y2)
 
 def test_next_cell_search2():
     square_grid = HexagonalGrid(8, holes=[(0, 4)])
-    x1, y1 = 0, 0
-    q1, r1, s1 = square_grid.to_cube(x1, y1)
-    q2, r2, s2 = square_grid.get_next_moveable_cell(q1, r1, s1, 'R')
-    x2, y2 = square_grid.to_offset(q2, r2, s2)
+    x1, y1 = (0, 0)
+    x2, y2 = square_grid.get_next_moveable_cell(x1, y1, 'R')
     assert x2 == 0 and y2 == 3
 
 def test_movement():
     square_grid = HexagonalGrid(8)
-    x1, y1 = 0, 0
-    q1, r1, s1 = square_grid.to_cube(x1, y1)
-    square_grid.initialize_player(1, q1, r1, s1, 16)
-    q2, r2, s2 = square_grid.get_next_moveable_cell(q1, r1, s1, 'R')
-    assert square_grid.is_empty(q2, r2, s2)
+    x1, y1 = (0, 0)
+    square_grid.initialize_player(1, x1, y1, 16)
+    x2, y2 = square_grid.get_next_moveable_cell(x1, y1, 'R')
+    assert square_grid.is_empty(x2, y2)
 
     square_grid.move_player(1, x1, y1, 6, 'R')
-    assert not square_grid.is_empty(q2, r2, s2)
-    assert square_grid.units_at(q1, r1, s1) == 10
-    assert square_grid.units_at(q2, r2, s2) == 6
-    assert square_grid.player_at(q2, r2, s2) == 1
+    assert not square_grid.is_empty(x2, y2)
+    assert square_grid.units_at(x1, y1) == 10
+    assert square_grid.units_at(x2, y2) == 6
+    assert square_grid.player_at(x2, y2) == 1

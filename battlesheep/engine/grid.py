@@ -78,42 +78,44 @@ class HexagonalGrid:
         y += self._size // 2
         return x, y
 
-    def __getitem__(self, q: int, r: int, s: int) -> np.ndarray:
-        x, y = self.to_offset(q, r, s)
+    def __getitem__(self, x: int, y: int) -> np.ndarray:
         return self._grid[x, y]
 
-    def _out_of_bounds(self, q: int, r: int, s: int) -> bool:
+    def _out_of_bounds(self, x: int, y: int) -> bool:
         """Returns True if the given coordinates are out of bounds."""
-        x, y = self.to_offset(q, r, s)
         return x < 0 or x >= self._size or y < 0 or y >= self._size
 
-    def is_empty(self, q: int, r: int, s:int) -> bool:
+    def _out_of_bounds_cube(self, q: int, r: int, s: int) -> bool:
+        """Returns True if the given coordinates are out of bounds."""
+        return self._out_of_bounds(*self.to_offset(q, r, s))
+
+    def is_empty(self, x: int, y: int) -> bool:
         """Returns True if the cell is empty."""
-        return self.__getitem__(q, r, s)[0] == 0 
+        return self.__getitem__(x, y)[0] == 0 
 
-    def is_hole(self, q: int, r: int, s: int) -> bool:
+    def is_hole(self, x: int, y: int) -> bool:
         """Returns True if the cell is a hole."""
-        return self.__getitem__(q, r, s)[0] == -1 
+        return self.__getitem__(x, y)[0] == -1 
 
-    def is_occupied(self, q: int, r: int, s: int) -> bool:
+    def is_occupied(self, x: int, y: int) -> bool:
         """Returns True if the cell is occupied."""
-        return self.__getitem__(q, r, s)[0] > 0 
+        return self.__getitem__(x, y)[0] > 0 
 
-    def is_occupied_by_player(self, q: int, r: int, s: int, player_id: int) -> bool:
+    def is_occupied_by_player(self, x: int, y: int, player_id: int) -> bool:
         """Returns True if the cell is occupied."""
-        return self.__getitem__(q, r, s)[0] == player_id
+        return self.__getitem__(x, y)[0] == player_id
 
-    def player_at(self, q: int, r: int, s: int) -> int:
+    def player_at(self, x: int, y: int) -> int:
         """Returns the player occupying the cell. Will
         raise an AssertionError if the cell is not occupied."""
-        assert self.is_occupied(q, r, s)
-        return self.__getitem__(q, r, s)[0]
+        assert self.is_occupied(x, y)
+        return self.__getitem__(x, y)[0]
 
-    def units_at(self, q: int, r: int, s: int) -> int:
+    def units_at(self, x: int, y: int) -> int:
         """Returns the number of units in the cell. Will
         raise an AssertionError if the cell is not occupied."""
-        assert self.is_occupied(q, r, s)
-        return self.__getitem__(q, r, s)[1] 
+        assert self.is_occupied(x, y)
+        return self.__getitem__(x, y)[1] 
 
     def get_player_positions(self, player_id: int) -> Iterator[Coordinate]:
         """Returns an iterator of the positions of the
@@ -121,20 +123,22 @@ class HexagonalGrid:
         assert player_id >= 1
         return np.where(self._grid[..., 0] == player_id)
 
-    def get_next_moveable_cell(self, q: int, r: int, s: int, direction: str) -> Coordinate:
+    def get_next_moveable_cell(self, x: int, y: int, direction: str) -> Coordinate:
         """Returns the next cell in the grid in the given
         direction that a player can move to."""
         if direction not in DIRECTIONS.keys():
             raise ValueError('Invalid direction.')
 
+        q, r, s = self.to_cube(x, y)
         dq, dr, ds = DIRECTIONS[direction]
-        while not self._out_of_bounds(q+dq, r+dr, s+ds):
-            if not self.is_empty(q+dq, r+dr, s+ds):
-                return q, r, s
+        while not self._out_of_bounds_cube(q+dq, r+dr, s+ds):
+            nx, ny = self.to_offset(q+dq, r+dr, s+ds)
+            if not self.is_empty(nx, ny):
+                break
             q += dq
             r += dr
             s += ds
-        return q, r, s
+        return self.to_offset(q, r, s)
 
     def get_moveable_positions(self) -> Iterator[Coordinate]:
         """Returns an iterator of the positions where it
@@ -148,47 +152,45 @@ class HexagonalGrid:
         player_options = np.vstack(np.where(
             (self._grid[..., 0] == player_id) &
             (self._grid[..., 1] > 1))).T
-        return [(q, r, s) for q, r, s in player_options
-            if self._available_moves(q, r, s)]
+        return [(x, y) for x, y in player_options
+            if self._available_moves(x, y)]
 
-    def _available_moves(self, q: int, r: int, s: int) -> bool:
+    def _available_moves(self, x: int, y: int) -> bool:
         """Returns True if the cell can be moved."""
+        q, r, s = self.to_cube(x, y)
         # For efficiency, check neighbours first
         for direction in DIRECTIONS.keys():
             dq, dr, ds = DIRECTIONS[direction]
-            if self._out_of_bounds(q+dq, r+dr, s+ds):
+            if self._out_of_bounds_cube(q+dq, r+dr, s+ds):
                 continue
-            if self.is_empty(q+dq, r+dr, s+ds):
+            nx, ny = self.to_offset(q+dq, r+dr, s+ds)
+            if self.is_empty(nx, ny):
                 return True
 
         # Then check the rest
         for direction in DIRECTIONS.keys():
-            nq, nr, ns = self.get_next_moveable_cell(q, r, s, direction)
-            if np.any([nq != q, nr != r, ns != s]):
+            nx, ny = self.get_next_moveable_cell(x, y, direction)
+            if np.any([nx != x, ny != y]):
                 return True
 
         return False
 
-    def initialize_player(self, player_id: int, q: int, r: int, s: int,
-    n_units: int) -> None:
+    def initialize_player(self, player_id: int, x: int, y: int, n_units: int) -> None:
         """Initializes the player at the given coordinates."""
-        assert self.is_empty(q, r, s)
+        assert self.is_empty(x, y)
         assert player_id >= 1
-        x, y = self.to_offset(q, r, s)
         self._grid[x, y, 0] = player_id 
         self._grid[x, y, 1] = n_units 
 
     def move_player(self, player_id: int, x: int, y: int,
     n_units: int, direction: str) -> None:
         """Moves the player in the given direction."""
-        q, r, s = self.to_cube(x, y)
         assert player_id >= 1
-        assert self.player_at(q, r, s) == player_id
-        assert n_units > 1 and n_units < self.units_at(q, r, s)
-        nq, nr, ns = self.get_next_moveable_cell(q, r, s, direction)
-        assert self.is_empty(nq, nr, ns) and (nq != q or nr != r or ns != s)
+        assert self.player_at(x, y) == player_id
+        assert n_units > 1 and n_units < self.units_at(x, y)
+        nx, ny = self.get_next_moveable_cell(x, y, direction)
+        assert self.is_empty(nx, ny) and (nx != x or ny != y)
 
-        nx, ny = self.to_offset(nq, nr, ns)
-        self._grid[x, y, 1] -= n_units      
+        self._grid[x, y, 1] -= n_units
         self._grid[nx, ny, 0] = player_id
         self._grid[nx, ny, 1] = n_units
