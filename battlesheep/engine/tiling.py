@@ -1,5 +1,6 @@
 """Utils to build initial board."""
 
+import random
 from typing import Iterator
 
 import numpy as np
@@ -30,6 +31,9 @@ class HexCoord:
 
     def __hash__(self) -> int:
         return hash((self.q, self.r, self.s))
+
+    def __iter__(self) -> Iterator[int]:
+        return iter((self.q, self.r, self.s))
 
 
 def _join_two_tiles(one: Iterator[HexCoord], other: Iterator[HexCoord],
@@ -101,3 +105,35 @@ class BasicTile(HexagonalTile):
             HexCoord( 1, -1,  0),
             HexCoord( 1,  0, -1),
         ]
+
+def generate_random_tiling(n_basic_tiles, max_tries=100, max_picks=20):
+    """Generates a random tiling of hexagonal tiles."""
+
+    n_tries = 0
+    while n_tries < max_tries:
+        n_tries += 1
+
+        construction = BasicTile()
+        for _ in range(n_basic_tiles):
+            n_picks = 0
+            succeeded = False
+            while n_picks < max_picks:
+                n_picks += 1
+                try:
+                    new_tile = BasicTile()
+                    c1 = random.choice(construction.space_occupied)
+                    c2 = random.choice(new_tile.space_occupied)
+                    rel_direction = random.choice([k for k in DIRECTIONS.keys()])
+                    construction = construction.join(
+                        new_tile, c1, c2, rel_direction
+                    )
+                    succeeded = True
+                    break
+                except ValueError as e:
+                    pass
+
+            if not succeeded:
+                break
+
+    return construction
+            
