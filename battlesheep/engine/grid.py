@@ -187,7 +187,7 @@ class HexagonalGrid:
         """Moves the player in the given direction."""
         assert player_id >= 1
         assert self.player_at(x, y) == player_id
-        assert n_units > 1 and n_units < self.units_at(x, y)
+        assert n_units >= 1 and n_units < self.units_at(x, y)
         nx, ny = self.get_next_moveable_cell(x, y, direction)
         assert self.is_empty(nx, ny) and (nx != x or ny != y)
 
