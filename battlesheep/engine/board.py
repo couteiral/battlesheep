@@ -5,7 +5,7 @@ from typing import Iterator, Tuple
 
 import numpy as np
 
-from grid import Coordinate, HexagonalGrid, DIRECTIONS
+from .grid import Coordinate, HexagonalGrid, DIRECTIONS
 
 
 Action = Tuple[Coordinate, str]
@@ -30,6 +30,22 @@ class Board:
     def get_score(self, player_id) -> int:
         assert player_id >= 1
         return self._grid.get_score(player_id)
+
+    def is_hole(self, x: int, y: int) -> bool:
+        """Returns True if the given cell is a hole."""
+        return self._grid.is_hole(x, y)
+
+    def is_empty(self, x: int, y: int) -> bool:
+        """Returns True if the given cell is empty."""
+        return self._grid.is_empty(x, y)
+
+    def units_at(self, x: int, y: int) -> int:
+        """Returns the number of units at the given cell."""
+        return self._grid.units_at(x, y)
+
+    def player_at(self, x: int, y: int) -> int:
+        """Returns the player at the given cell."""
+        return self._grid.player_at(x, y)
 
     def initialize_player(self, player_id: int, x: int, y: int, n_units: int) -> None:
         """Initializes the player at the given coordinates."""
