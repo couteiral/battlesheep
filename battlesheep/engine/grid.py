@@ -181,6 +181,7 @@ class HexagonalGrid:
     def move_player(self, player_id: int, x: int, y: int,
     n_units: int, direction: str) -> None:
         """Moves the player in the given direction."""
+        q, r, s = self.to_cube(x, y)
         assert player_id >= 1
         assert self.player_at(q, r, s) == player_id
         assert n_units > 1 and n_units < self.units_at(q, r, s)
